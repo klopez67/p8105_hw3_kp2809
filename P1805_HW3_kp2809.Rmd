@@ -1,0 +1,6 @@
+---
+title: "P1805_HW3_kp2809"
+author: "Kimberly Lopez"
+date: "2024-10-07"
+output: github_document
+---
