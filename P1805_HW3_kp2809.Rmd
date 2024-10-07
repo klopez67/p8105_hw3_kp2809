@@ -4,3 +4,10 @@ author: "Kimberly Lopez"
 date: "2024-10-07"
 output: github_document
 ---
+Loading Data 
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+data("ny_noaa")
+```
+
