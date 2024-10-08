@@ -9,9 +9,10 @@ Loading Data
 library(tidyverse)
 library(p8105.datasets)
 data(ny_noaa)
+
 ```
 
-The ny_noaa data set has 7 columns and 2.5 million row entries which detail the id, date of observed data, and precipitation, snow, snwd, temperature max, and temperature min. There is some missing data in columns for precipitation, snwd, tempertaure max and min. 
+The ny_noaa data set has 7 columns and 2.5 million row entries which detail the id, date of observed data, and precipitation (tenths of mm), snow (mm), snow depth (mm), temperature max(tenths of degrees C), and temperature min (tenths of degrees C). Id being Weather station ID name.There is some missing data in columns for precipitation, snwd, tempertaure max and min. 
 
 
 Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
@@ -26,21 +27,51 @@ ny_noaa |>
   relocate(id, date, year, month,day)
 
 ```
-
-
 ```{r}
 ny_noaa |> 
   select(snow)|>
   drop_na()|>
   pull(snow)|> 
   range()
+```
+The range of snow fall is -13 to 10,160. 
+
+```{r}
 ny_noaa|>
   ggplot(aes(x= id,y = snow)) + 
-  geom_violin()
-  
+  geom_point()
+```
+*Precipitation * 
+```{r}
+ny_noaa |> 
+  select(prcp)|>
+  drop_na()|> 
+  pull(prcp)|>
+  range()
+```
+Precipitation typically falls between 0 to 500 mm, so some of these values need to be converted. 
+
+*Temperature* 
+```{r}
+ny_noaa |> 
+  select(tmax)|>
+  drop_na()|> 
+  pull(tmax)|>
+  range()
+
+```
+The range of temperature is -1-99 which could be in F rather than Celcius. 
+
+```{r}
+ny_noaa|>
+  ggplot(aes(x= id,y = prcp)) + 
+  geom_point()
 ```
 
+The range for precipitation is 22860 which leads me to think they are not in the same units. 
 
+
+There appears to be 4 outliers in reported snowfall which might be calculated in different units. 
 
 Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 
