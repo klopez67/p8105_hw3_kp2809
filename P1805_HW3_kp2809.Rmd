@@ -5,8 +5,9 @@ date: "2024-10-07"
 output: github_document
 ---
 Loading Data 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
+library(haven)
 library(p8105.datasets)
 data(ny_noaa)
 
@@ -19,7 +20,7 @@ Do some data cleaning. Create separate variables for year, month, and day. Ensur
 
 - date has year, month, and day. Need to pivot wider and save into 3 new columns 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa |> 
   mutate(year = format(date, "%Y"),
          month = format(date, "%m"),
@@ -27,7 +28,7 @@ ny_noaa |>
   relocate(id, date, year, month,day)
 
 ```
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa |> 
   select(snow)|>
   drop_na()|>
@@ -36,13 +37,13 @@ ny_noaa |>
 ```
 The range of snow fall is -13 to 10,160. 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa|>
   ggplot(aes(x= id,y = snow)) + 
   geom_point()
 ```
 *Precipitation * 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa |> 
   select(prcp)|>
   drop_na()|> 
@@ -52,7 +53,7 @@ ny_noaa |>
 Precipitation typically falls between 0 to 500 mm, so some of these values need to be converted. 
 
 *Temperature* 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa |> 
   select(tmax)|>
   drop_na()|> 
@@ -62,7 +63,7 @@ ny_noaa |>
 ```
 The range of temperature is -1-99 which could be in F rather than Celcius. 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ny_noaa|>
   ggplot(aes(x= id,y = prcp)) + 
   geom_point()
@@ -76,3 +77,32 @@ There appears to be 4 outliers in reported snowfall which might be calculated in
 Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+
+# Problem 2 
+
+Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; 
+
+- exclude participants less than 21 years of age, and those with missing demographic data
+- encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+```{r}
+nhanes_accel = read_csv("data/nhanes_accel.csv",na = c("NA","","."))
+nhanes_covar = read_csv("data/nhanes_covar.csv", na = c("NA","","."), skip =4)
+
+nhanes_df = 
+  inner_join(nhanes_accel, nhanes_covar, by= "SEQN")|>
+  janitor::clean_names()|>
+  relocate(seqn, sex, age, bmi, education)|>
+  filter(age >=21)|>
+  drop_na(bmi,education)|>
+  pivot_longer(
+    cols= min1:min1440,
+    names_to = "minute_day", 
+    names_prefix = "min",
+    values_to= "phys_activ"
+  )
+
+nhanes_df
+```
+**Might need to pivot longer saving all min1 times to a column of minute_day and saving the values to a column of phys_activity for each of those times
