@@ -11,4 +11,9 @@ around-the-clock observations.
 This problem uses accelerometer data collected on 250 participants in the NHANES 
 study. The participants’ demographic data can be downloaded here, and their 
 accelerometer data can be downloaded here. Variables *MIMS are the MIMS values 
-for each minute of a 24-hour day starting at midnight.
+for each minute of a single 24-hour day starting at midnight.
+
+- the education variable is categorical and should have a natural order of 
+  - 1= less than h.s. 
+  - 2= h.s. equivalent 
+  - 3 = More than h.s.

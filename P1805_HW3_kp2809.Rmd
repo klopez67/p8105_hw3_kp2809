@@ -7,10 +7,15 @@ output: github_document
 Loading Data 
 ```{r include=FALSE}
 library(tidyverse)
-library(haven)
+library(ggridges)
+library(patchwork)
 library(p8105.datasets)
-data(ny_noaa)
+data("ny_noaa")
 
+```
+
+```{r}
+nrow(ny_noaa)
 ```
 
 The ny_noaa data set has 7 columns and 2.5 million row entries which detail the id, date of observed data, and precipitation (tenths of mm), snow (mm), snow depth (mm), temperature max(tenths of degrees C), and temperature min (tenths of degrees C). Id being Weather station ID name.There is some missing data in columns for precipitation, snwd, tempertaure max and min. 
@@ -20,15 +25,18 @@ Do some data cleaning. Create separate variables for year, month, and day. Ensur
 
 - date has year, month, and day. Need to pivot wider and save into 3 new columns 
 
-```{r eval=FALSE, include=FALSE}
-ny_noaa |> 
-  mutate(year = format(date, "%Y"),
-         month = format(date, "%m"),
-         day = format(date, "%d"))|> 
-  relocate(id, date, year, month,day)
+```{r}
+ny_noaa = 
+  ny_noaa |>
+  separate(date, into = c("year", "month", "day"), convert = TRUE) |> 
+  mutate(
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin))
+
 
 ```
-```{r eval=FALSE, include=FALSE}
+
+```{r}
 ny_noaa |> 
   select(snow)|>
   drop_na()|>
@@ -42,15 +50,6 @@ ny_noaa|>
   ggplot(aes(x= id,y = snow)) + 
   geom_point()
 ```
-*Precipitation * 
-```{r eval=FALSE, include=FALSE}
-ny_noaa |> 
-  select(prcp)|>
-  drop_na()|> 
-  pull(prcp)|>
-  range()
-```
-Precipitation typically falls between 0 to 500 mm, so some of these values need to be converted. 
 
 *Temperature* 
 ```{r eval=FALSE, include=FALSE}
@@ -62,7 +61,6 @@ ny_noaa |>
 
 ```
 The range of temperature is -1-99 which could be in F rather than Celcius. 
-
 ```{r eval=FALSE, include=FALSE}
 ny_noaa|>
   ggplot(aes(x= id,y = prcp)) + 
@@ -70,13 +68,43 @@ ny_noaa|>
 ```
 
 The range for precipitation is 22860 which leads me to think they are not in the same units. 
-
-
 There appears to be 4 outliers in reported snowfall which might be calculated in different units. 
-
 Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 
+
+```{r}
+ny_noaa |> 
+  group_by(id, year, month) |> 
+  filter(month %in% c(1, 7)) |> 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE, color = id)) |> 
+  ggplot(aes(x = year, y = mean_tmax, group = id)) + 
+  geom_point() + 
+  geom_path() +
+  facet_grid(~month) +
+  labs(title = "Average monthly temperature for each station across years for January and July")
+```
+
+
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+```{r}
+hex = 
+  ny_noaa |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+hex
+```
+
+```{r}
+ridge = 
+  ny_noaa |>
+  filter(snow < 100, snow > 0) |>
+  ggplot(aes(x = snow, y = as.factor(year))) + 
+  geom_density_ridges()
+
+hex + ridge
+```
+
 
 
 # Problem 2 
@@ -84,7 +112,40 @@ Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a
 Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; 
 
 - exclude participants less than 21 years of age, and those with missing demographic data
+- Might need to pivot longer saving all min1 times to a column of minute_day and saving the values to a column of phys_activity for each of those times
 - encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+```{r}
+nhanes_accel = read_csv("data/nhanes_accel.csv",na = c("NA","","."))
+nhanes_covar = read_csv("data/nhanes_covar.csv", na = c("NA","","."), skip =4)
+
+nhanes_df = 
+  inner_join(nhanes_accel, nhanes_covar, by= "SEQN")|>
+  janitor::clean_names()|>
+  relocate(seqn, sex, age, bmi, education)|>
+  filter(age >=21)|>
+  drop_na(bmi,education)
+
+nhanes_df
+```
+Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+
+- 1= male, 2= female
+- 2 rows men or women 
+- 3 columns sex, education level 1, 2, 3 
+
+```{r}
+nhanes_df |>
+  select(sex, education) |>
+  table() |>
+  knitr::kable(col.names = c("Less than HS", "HS Equivalent", "More than HS"))
+
+```
+
+This table shows us there are 27 males with less than a HS education, 35 with HS equivalent education, and 56 with more than a HS level education. It also shows 28 females with less than HS, 23 with HS equivalent level of education, and 59 with more than a HS level education in this sample. 
+
+
+Aggregate across minutes to create a total activity variable for each participant. 
 
 ```{r}
 nhanes_accel = read_csv("data/nhanes_accel.csv",na = c("NA","","."))
@@ -101,8 +162,14 @@ nhanes_df =
     names_to = "minute_day", 
     names_prefix = "min",
     values_to= "phys_activ"
+  )|>
+  mutate(
+    minute_day = as.numeric(minute_day)
   )
 
 nhanes_df
 ```
-**Might need to pivot longer saving all min1 times to a column of minute_day and saving the values to a column of phys_activity for each of those times
+
+Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+
+- group by sex 
