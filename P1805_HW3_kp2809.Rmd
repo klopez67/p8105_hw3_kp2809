@@ -239,7 +239,7 @@ nhanes_df_min |>
     color = "Sex",
     caption = "Accelerometer data")
 ```
-This plot shows physical activity did not have much variation in trends across different sex. There were higher peaks in physical activity among those who have an education level more than high school. Overtime, all 3 education levels have dips in physical activity 
+This plot shows physical activity did not have much variation in trends across different sex. There were higher peaks in physical activity among those who have an education level more than high school. Overtime, all 3 education levels have dips in physical activity.
 
 
 
@@ -296,7 +296,7 @@ citi_df |>
 
 ```
 
-The number of casual riders from January 2020 has increased overtime to be similar in proportion to member riders by July 2024. Both casual riders and members have increased since 2020. There is normally more riders in general during July than Janurary of both years likley due to weather conditions during that time of year favoring bike riding. 
+The number of casual riders from January 2020 has increased overtime to be similar in proportion to member riders by July 2024. Both casual riders and members have increased since 2020. There is normally more riders in general during July than January of both years likely due to weather conditions during that time of year favoring bike riding. 
 
 
 2.) Make a table showing the 5 most popular starting stations for July 2024; include the number of rides originating from these stations.
